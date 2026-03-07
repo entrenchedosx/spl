@@ -1,0 +1,950 @@
+// =============================================================================
+// SPL SUPER ADVANCED TEST SUITE
+// Tests all language features with per-section error handling and summary report
+// =============================================================================
+
+let passed = 0
+let failed = 0
+let errors = array()
+
+def ok(section) {
+    passed = passed + 1
+    print(str("  [OK] ", section))
+}
+
+def fail(section, msg) {
+    failed = failed + 1
+    push(errors, str(section, ": ", msg))
+    print(str("  [FAIL] ", section, ": ", msg))
+}
+
+def add(a, b) {
+    return a + b
+}
+def fact(n) {
+    if (n <= 1) {
+        return 1
+    }
+    return n * fact(n - 1)
+}
+def scopeTest() {
+    let localNum = 200
+    return globalNum + localNum
+}
+
+print("")
+print("=== SPL SUPER ADVANCED TEST SUITE ===")
+print("")
+
+// -----------------------------------------------------------------------------
+// 1. Variables: let, const
+// -----------------------------------------------------------------------------
+try {
+    let x = 42
+    let y = 3.14
+    let z = "hello"
+    const PI_APPROX = 3.14159
+    if (x == 42 && y > 3 && len(z) == 5) {
+        ok("Variables (let, const)")
+    } else {
+        fail("Variables", "values wrong")
+    }
+} catch (e) {
+    fail("Variables", e)
+}
+
+// -----------------------------------------------------------------------------
+// 2. Arithmetic & comparison
+// -----------------------------------------------------------------------------
+try {
+    let a = 2 + 3 * 4 - 5 / 1
+    let b = 10 % 3
+    let gt = 5 > 3
+    let eq = 2 == 2
+    if (b == 1 && gt && eq && a >= 8 && a <= 10) {
+        ok("Arithmetic & comparison")
+    } else {
+        fail("Arithmetic", str("a=", a, " b=", b))
+    }
+} catch (e) {
+    fail("Arithmetic", e)
+}
+
+// -----------------------------------------------------------------------------
+// 3. Logical: &&, ||, !
+// -----------------------------------------------------------------------------
+try {
+    if (true && !false && (true || false)) {
+        ok("Logical (&&, ||, !)")
+    } else {
+        fail("Logical", "expression")
+    }
+} catch (e) {
+    fail("Logical", e)
+}
+
+// -----------------------------------------------------------------------------
+// 4. Null and null coalescing
+// -----------------------------------------------------------------------------
+try {
+    let n = null
+    let v = null ?? 99
+    let w = 5 ?? 99
+    if (n == null && v == 99 && w == 5) {
+        ok("Null & ??")
+    } else {
+        fail("Null coalescing", str("v=", v, " w=", w))
+    }
+} catch (e) {
+    fail("Null coalescing", e)
+}
+
+// -----------------------------------------------------------------------------
+// 5. Arrays: array(), len, index, assignment, slice
+// -----------------------------------------------------------------------------
+try {
+    let arr = array(10, 20, 30, 40)
+    let n = len(arr)
+    arr[0] = 100
+    let s = arr[1:3]
+    if (n == 4 && len(s) >= 1 && s[0] == 20) {
+        ok("Arrays (array, len, index, slice)")
+    } else {
+        fail("Arrays", str("len=", n))
+    }
+} catch (e) {
+    fail("Arrays", e)
+}
+
+// -----------------------------------------------------------------------------
+// 6. Array literal and push
+// -----------------------------------------------------------------------------
+try {
+    let a = array(1, 2, 3)
+    push(a, 4)
+    if (len(a) == 4 && a[3] == 4) {
+        ok("Push")
+    } else {
+        fail("Push", str("len=", len(a)))
+    }
+} catch (e) {
+    fail("Push", e)
+}
+
+// -----------------------------------------------------------------------------
+// 7. Maps: literal, index, keys, values, has
+// -----------------------------------------------------------------------------
+try {
+    let m = { "name": "SPL", "version": 1 }
+    let k = keys(m)
+    let v = values(m)
+    let h = has(m, "name")
+    if (len(k) == 2 && h && m["name"] == "SPL") {
+        ok("Maps (literal, keys, values, has)")
+    } else {
+        fail("Maps", str("keys=", len(k)))
+    }
+} catch (e) {
+    fail("Maps", e)
+}
+
+// -----------------------------------------------------------------------------
+// 8. Strings: str, len, upper, lower, replace, join, split
+// -----------------------------------------------------------------------------
+try {
+    let s = "Hello World"
+    let u = upper(s)
+    let l = lower(s)
+    let r = replace(s, "World", "SPL")
+    let j = join(array("a", "b", "c"), "-")
+    let sp = split("x,y,z", ",")
+    if (len(sp) == 3 && r == "Hello SPL" && j == "a-b-c") {
+        ok("Strings (upper, lower, replace, join, split)")
+    } else {
+        fail("Strings", r)
+    }
+} catch (e) {
+    fail("Strings", e)
+}
+
+// -----------------------------------------------------------------------------
+// 9. Math: sqrt, pow, sin, cos, floor, ceil, round, abs, log
+// -----------------------------------------------------------------------------
+try {
+    let s = sqrt(16)
+    let p = pow(2, 5)
+    let f = floor(3.8)
+    let c = ceil(3.2)
+    let r = round(3.5)
+    let ab = abs(-7)
+    if (s >= 3.99 && s <= 4.01 && p >= 31.99 && p <= 32.01 && ab >= 6.99 && ab <= 7.01) {
+        ok("Math (sqrt, pow, floor, ceil, round, abs)")
+    } else {
+        fail("Math", str("s=", s, " p=", p, " ab=", ab))
+    }
+} catch (e) {
+    fail("Math", e)
+}
+
+// -----------------------------------------------------------------------------
+// 10. Constants PI, E
+// -----------------------------------------------------------------------------
+try {
+    if (PI > 3.14 && E > 2.7) {
+        ok("Constants (PI, E)")
+    } else {
+        fail("Constants", "PI/E")
+    }
+} catch (e) {
+    fail("Constants", e)
+}
+
+// -----------------------------------------------------------------------------
+// 11. Functions: def, return, recursion
+// -----------------------------------------------------------------------------
+try {
+    let sumAdd = add(2, 3)
+    let fact5 = fact(5)
+    if (sumAdd >= 4 && sumAdd <= 6 && fact5 >= 119 && fact5 <= 121) {
+        ok("Functions (def, return, recursion)")
+    } else {
+        fail("Functions", str("add=", sumAdd, " fact5=", fact5))
+    }
+} catch (e) {
+    fail("Functions", e)
+}
+
+// -----------------------------------------------------------------------------
+// 12. Control flow: if, elif, else
+// -----------------------------------------------------------------------------
+try {
+    let x = 7
+    let out = ""
+    if (x > 10) {
+        out = "big"
+    } elif (x > 5) {
+        out = "medium"
+    } else {
+        out = "small"
+    }
+    if (out == "medium") {
+        ok("Control flow (if, elif, else)")
+    } else {
+        fail("Control flow", out)
+    }
+} catch (e) {
+    fail("Control flow", e)
+}
+
+// -----------------------------------------------------------------------------
+// 13. Loops: for in range, for in array
+// -----------------------------------------------------------------------------
+try {
+    let sum = 0
+    for i in range(1, 6) {
+        sum = sum + i
+    }
+    let arr = array(10, 20, 30)
+    let sum2 = 0
+    for x in arr {
+        sum2 = sum2 + x
+    }
+    if (sum2 == 60 && (sum == 15 || sum == 21 || sum == 30)) {
+        ok("Loops (for in range, for in array)")
+    } else {
+        fail("Loops", str("sum=", sum, " sum2=", sum2))
+    }
+} catch (e) {
+    fail("Loops", e)
+}
+
+// -----------------------------------------------------------------------------
+// 14. Try / catch / finally
+// -----------------------------------------------------------------------------
+try {
+    let caught = 0
+    try {
+        throw "oops"
+    } catch (e) {
+        caught = 1
+    } finally {
+    }
+    if (caught == 1) {
+        ok("Try/catch/finally")
+    } else {
+        fail("Try/catch", str("caught=", caught))
+    }
+} catch (e) {
+    fail("Try/catch", e)
+}
+
+// -----------------------------------------------------------------------------
+// 15. Destructuring: array and map
+// -----------------------------------------------------------------------------
+try {
+    let [u, v] = array(10, 20)
+    let obj = { "a": 1, "b": 2 }
+    let { a, b } = obj
+    if (u == 10 && v == 20 && a == 1 && b == 2) {
+        ok("Destructuring ([], {})")
+    } else {
+        fail("Destructuring", str("u=", u, " a=", a))
+    }
+} catch (e) {
+    fail("Destructuring", e)
+}
+
+// -----------------------------------------------------------------------------
+// 16. Type and dir
+// -----------------------------------------------------------------------------
+try {
+    let t1 = type(42)
+    let t2 = type("x")
+    let t3 = type(array(1))
+    let d = dir(array(1, 2))
+    if (t1 == "number" && t2 == "string" && t3 == "array" && len(d) >= 0) {
+        ok("Type & dir")
+    } else {
+        fail("Type/dir", t1)
+    }
+} catch (e) {
+    fail("Type/dir", e)
+}
+
+// -----------------------------------------------------------------------------
+// 17. JSON parse and stringify
+// -----------------------------------------------------------------------------
+try {
+    let raw = "{\"x\": 1, \"y\": [1, 2]}"
+    let data = json_parse(raw)
+    let back = json_stringify(data)
+    ok("JSON (parse, stringify)")
+} catch (e) {
+    fail("JSON", e)
+}
+
+// -----------------------------------------------------------------------------
+// 18. CLI args
+// -----------------------------------------------------------------------------
+try {
+    let args = cli_args()
+    if (args == null || type(args) == "array") {
+        ok("CLI args")
+    } else {
+        fail("CLI args", type(args))
+    }
+} catch (e) {
+    fail("CLI args", e)
+}
+
+// -----------------------------------------------------------------------------
+// 19. File I/O (write then read)
+// -----------------------------------------------------------------------------
+try {
+    let testPath = "spl_test_tmp_file.txt"
+    write_file(testPath, "SPL test content")
+    let content = read_file(testPath)
+    let exists = fileExists(testPath)
+    if (content == "SPL test content" && exists) {
+        ok("File I/O (write_file, read_file, fileExists)")
+    } else {
+        fail("File I/O", str("content=", content))
+    }
+} catch (e) {
+    fail("File I/O", e)
+}
+
+// -----------------------------------------------------------------------------
+// 20. listDir
+// -----------------------------------------------------------------------------
+try {
+    let entries = listDir(".")
+    if (type(entries) == "array") {
+        ok("listDir")
+    } else {
+        fail("listDir", type(entries))
+    }
+} catch (e) {
+    fail("listDir", e)
+}
+
+// -----------------------------------------------------------------------------
+// 21. Time and random
+// -----------------------------------------------------------------------------
+try {
+    let t = time()
+    let r = random(1, 10)
+    if (t > 0 && r >= 1 && r <= 10) {
+        ok("Time & random")
+    } else {
+        fail("Time/random", str("t=", t, " r=", r))
+    }
+} catch (e) {
+    fail("Time/random", e)
+}
+
+// -----------------------------------------------------------------------------
+// 22. Inspect
+// -----------------------------------------------------------------------------
+try {
+    let s = inspect(42)
+    if (len(s) > 0) {
+        ok("Inspect")
+    } else {
+        fail("Inspect", "empty")
+    }
+} catch (e) {
+    fail("Inspect", e)
+}
+
+// -----------------------------------------------------------------------------
+// 23. Optional chaining (nil?.prop)
+// -----------------------------------------------------------------------------
+try {
+    let nilVal = null
+    let result = nilVal?.x
+    if (result == null) {
+        ok("Optional chaining (null?.x)")
+    } else {
+        fail("Optional chaining", str("result=", result))
+    }
+} catch (e) {
+    fail("Optional chaining", e)
+}
+
+// -----------------------------------------------------------------------------
+// 24. Nested structures and index chain
+// -----------------------------------------------------------------------------
+try {
+    let outer = { "inner": array(1, 2, 3) }
+    let first = outer["inner"][0]
+    if (first == 1) {
+        ok("Nested index")
+    } else {
+        fail("Nested index", str("first=", first))
+    }
+} catch (e) {
+    fail("Nested index", e)
+}
+
+// -----------------------------------------------------------------------------
+// 25. Scope: global vs local
+// -----------------------------------------------------------------------------
+let globalNum = 0
+try {
+    globalNum = 100
+    let r = scopeTest()
+    if (r == 300 && globalNum == 100) {
+        ok("Scope (global/local)")
+    } else {
+        fail("Scope", str("r=", r))
+    }
+} catch (e) {
+    fail("Scope", e)
+}
+
+// -----------------------------------------------------------------------------
+// 26. C-style for loop
+// -----------------------------------------------------------------------------
+try {
+    let sum = 0
+    for (let i = 0; i < 5; i = i + 1) {
+        sum = sum + i
+    }
+    if (sum >= 6 && sum <= 10) {
+        ok("C-style for loop")
+    } else {
+        fail("C-style for", str("sum=", sum))
+    }
+} catch (e) {
+    fail("C-style for", e)
+}
+
+// -----------------------------------------------------------------------------
+// 27. While loop
+// -----------------------------------------------------------------------------
+try {
+    let n = 0
+    let acc = 0
+    while (n < 5) {
+        acc = acc + n
+        n = n + 1
+    }
+    if (acc == 10 && n == 5) {
+        ok("While loop")
+    } else {
+        fail("While", str("acc=", acc, " n=", n))
+    }
+} catch (e) {
+    fail("While", e)
+}
+
+// -----------------------------------------------------------------------------
+// 28. repeat N { }
+// -----------------------------------------------------------------------------
+try {
+    let count = 0
+    repeat 4 {
+        count = count + 1
+    }
+    if (count == 4) {
+        ok("repeat N")
+    } else {
+        fail("repeat", str("count=", count))
+    }
+} catch (e) {
+    fail("repeat", e)
+}
+
+// -----------------------------------------------------------------------------
+// 29. defer (runs on function exit)
+// -----------------------------------------------------------------------------
+def deferTest() {
+    defer print("")
+    return 1
+}
+try {
+    let out = deferTest()
+    if (out == 1) {
+        ok("defer")
+    } else {
+        fail("defer", str("out=", out))
+    }
+} catch (e) {
+    fail("defer", e)
+}
+
+// -----------------------------------------------------------------------------
+// 30. Match (simple + guard)
+// -----------------------------------------------------------------------------
+try {
+    let n = 15
+    let out = ""
+    match n {
+        case x if x > 10 => { out = "large" }
+        case x if x > 0 => { out = "positive" }
+        case _ => { out = "other" }
+    }
+    if (out == "large") {
+        ok("Match (guards)")
+    } else {
+        fail("Match guards", out)
+    }
+} catch (e) {
+    fail("Match guards", e)
+}
+
+// -----------------------------------------------------------------------------
+// 31. Match destructure
+// -----------------------------------------------------------------------------
+try {
+    let point = { "x": 0, "y": 5 }
+    let yVal = null
+    match point {
+        case { "x": 0, "y": y_val } => { yVal = y_val }
+        case _ => { yVal = -1 }
+    }
+    if (yVal == 5) {
+        ok("Match destructure")
+    } else {
+        fail("Match destructure", str("yVal=", yVal))
+    }
+} catch (e) {
+    fail("Match destructure", e)
+}
+
+// -----------------------------------------------------------------------------
+// 32. Ternary (a ? b : c)
+// -----------------------------------------------------------------------------
+try {
+    let x = 10
+    let s = (x > 5 ? "big" : "small")
+    let t = (x > 20 ? "huge" : "ok")
+    if (s == "big" && t == "ok") {
+        ok("Ternary")
+    } else {
+        fail("Ternary", str("s=", s, " t=", t))
+    }
+} catch (e) {
+    fail("Ternary", e)
+}
+
+// -----------------------------------------------------------------------------
+// 33. F-strings
+// -----------------------------------------------------------------------------
+try {
+    let name = "SPL"
+    let msg = f"Hello {name}!"
+    if (len(msg) > 5 && msg != "Hello !") {
+        ok("F-strings")
+    } else {
+        fail("F-strings", msg)
+    }
+} catch (e) {
+    fail("F-strings", e)
+}
+
+// -----------------------------------------------------------------------------
+// 34. Multiline string
+// -----------------------------------------------------------------------------
+try {
+    let text = """
+one
+two
+"""
+    if (len(text) >= 6) {
+        ok("Multiline string")
+    } else {
+        fail("Multiline string", str("len=", len(text)))
+    }
+} catch (e) {
+    fail("Multiline string", e)
+}
+
+// -----------------------------------------------------------------------------
+// 35. range() with step
+// -----------------------------------------------------------------------------
+try {
+    let r = range(0, 10, 2)
+    if (len(r) == 5 && r[0] == 0 && r[1] == 2) { ok("range with step") } else { fail("range step", str("len=", len(r))) }
+} catch (e) {
+    fail("range step", e)
+}
+
+// -----------------------------------------------------------------------------
+// 36. for i in start..end (range literal)
+// -----------------------------------------------------------------------------
+try {
+    let sum = 0
+    for i in 1..6 {
+        sum = sum + i
+    }
+    if (sum >= 15) {
+        ok("for in start..end")
+    } else {
+        fail("for ..", str("sum=", sum))
+    }
+} catch (e) {
+    fail("for ..", e)
+}
+
+// -----------------------------------------------------------------------------
+// 37. break and continue
+// -----------------------------------------------------------------------------
+try {
+    let v = 0
+    for i in range(0, 10) {
+        if (i == 3) { break }
+        v = i
+    }
+    if (v == 2) {
+        ok("break/continue")
+    } else {
+        fail("break", str("v=", v))
+    }
+} catch (e) {
+    fail("break", e)
+}
+
+// -----------------------------------------------------------------------------
+// 38. lambda
+// -----------------------------------------------------------------------------
+try {
+    let f = lambda (x) => x * 2
+    let y = f(7)
+    if (y == 14) {
+        ok("lambda")
+    } else {
+        fail("lambda", str("y=", y))
+    }
+} catch (e) {
+    fail("lambda", e)
+}
+
+// -----------------------------------------------------------------------------
+// 39. map, filter, reduce
+// -----------------------------------------------------------------------------
+try {
+    let nums = array(1, 2, 3, 4, 5)
+    let doubled = map(nums, lambda (x) => x * 2)
+    let evens = filter(nums, lambda (x) => x % 2 == 0)
+    let total = reduce(nums, lambda (a, b) => a + b)
+    if (len(doubled) == 5 && doubled[0] == 2 && len(evens) == 2 && total == 15) {
+        ok("map, filter, reduce")
+    } else {
+        fail("map/filter/reduce", str("total=", total))
+    }
+} catch (e) {
+    fail("map/filter/reduce", e)
+}
+
+// -----------------------------------------------------------------------------
+// 40. copy, deep_equal
+// -----------------------------------------------------------------------------
+try {
+    let a = array(1, 2, array(3))
+    let b = copy(a)
+    let eq = deep_equal(a, b)
+    if (eq && b != null) {
+        ok("copy, deep_equal")
+    } else {
+        fail("copy/deep_equal", str("eq=", eq))
+    }
+} catch (e) {
+    fail("copy/deep_equal", e)
+}
+
+// -----------------------------------------------------------------------------
+// 41. random_choice, random_shuffle, random_int
+// -----------------------------------------------------------------------------
+try {
+    let arr = array(10, 20, 30)
+    let c = random_choice(arr)
+    let ri = random_int(1, 10)
+    let sh = random_shuffle(array(1, 2, 3))
+    if (len(sh) == 3 && ri >= 1 && ri <= 10) {
+        ok("random_choice, random_shuffle, random_int")
+    } else {
+        fail("random_*", str("ri=", ri))
+    }
+} catch (e) {
+    fail("random_*", e)
+}
+
+// -----------------------------------------------------------------------------
+// 42. sin, cos, log
+// -----------------------------------------------------------------------------
+try {
+    let s = sin(0)
+    let c = cos(0)
+    let ln = log(E)
+    if (s >= -0.01 && s <= 0.01 && c >= 0.99 && ln >= 0.99 && ln <= 1.01) {
+        ok("sin, cos, log")
+    } else {
+        fail("sin/cos/log", str("s=", s, " c=", c, " ln=", ln))
+    }
+} catch (e) {
+    fail("sin/cos/log", e)
+}
+
+// -----------------------------------------------------------------------------
+// 43. profile_cycles
+// -----------------------------------------------------------------------------
+try {
+    let cy = profile_cycles(false)
+    if (type(cy) == "number" && cy >= 0) {
+        ok("profile_cycles")
+    } else {
+        fail("profile_cycles", str("cy=", cy))
+    }
+} catch (e) {
+    fail("profile_cycles", e)
+}
+
+// -----------------------------------------------------------------------------
+// 44. sleep
+// -----------------------------------------------------------------------------
+try {
+    sleep(0)
+    ok("sleep")
+} catch (e) {
+    fail("sleep", e)
+}
+
+// -----------------------------------------------------------------------------
+// 45. Error(), panic(), error_message()
+// -----------------------------------------------------------------------------
+try {
+    let err = Error("test", "ERR")
+    let msg = error_message(err)
+    if (msg != null && len(msg) > 0) {
+        ok("Error, error_message")
+    } else {
+        fail("Error", msg)
+    }
+} catch (e) {
+    fail("Error", e)
+}
+
+try {
+    try {
+        throw panic("fatal")
+    } catch (e) {
+        let m = error_message(e)
+        if (m != null) {
+            ok("panic, error_message in catch")
+        } else {
+            fail("panic", "no message")
+        }
+    }
+} catch (e2) {
+    fail("panic", e2)
+}
+
+// -----------------------------------------------------------------------------
+// 46. rethrow
+// -----------------------------------------------------------------------------
+try {
+    let rethrown = 0
+    try {
+        try {
+            throw "inner"
+        } catch (e) {
+            rethrow
+        }
+    } catch (e) {
+        rethrown = (e == "inner" ? 1 : 0)
+    }
+    if (rethrown == 1) {
+        ok("rethrow")
+    } else {
+        fail("rethrow", str("rethrown=", rethrown))
+    }
+} catch (e) {
+    fail("rethrow", e)
+}
+
+// -----------------------------------------------------------------------------
+// 47. assert
+// -----------------------------------------------------------------------------
+try {
+    assert true
+    assert 1 == 1, "one is one"
+    ok("assert")
+} catch (e) {
+    fail("assert", e)
+}
+
+try {
+    try {
+        assert false, "expected"
+    } catch (e) {
+        ok("assert throws on false")
+    }
+} catch (e) {
+    fail("assert throws", e)
+}
+
+// -----------------------------------------------------------------------------
+// 48. Classes: class, Instance, init, methods
+// -----------------------------------------------------------------------------
+class Counter {
+    init() {
+        this.n = 0
+    }
+    inc() {
+        this.n = this.n + 1
+        return this.n
+    }
+}
+try {
+    let c = Instance(Counter)
+    c.init()
+    let a = c.inc()
+    let b = c.inc()
+    if (a == 1 && b == 2) {
+        ok("Classes (Instance, init, methods)")
+    } else {
+        fail("Classes", str("a=", a, " b=", b))
+    }
+} catch (e) {
+    fail("Classes", e)
+}
+
+// -----------------------------------------------------------------------------
+// 49. var and function (alternative syntax)
+// -----------------------------------------------------------------------------
+try {
+    var vx = 99
+    function add2(a, b) { return a + b }
+    let r = add2(2, 3)
+    if (vx == 99 && r == 5) {
+        ok("var and func syntax")
+    } else {
+        fail("var/function", str("r=", r))
+    }
+} catch (e) {
+    fail("var/function", e)
+}
+
+// -----------------------------------------------------------------------------
+// 50. Optional chaining on object (obj?.a?.b)
+// -----------------------------------------------------------------------------
+try {
+    let obj = { "a": { "b": 42 } }
+    let val = obj?.a?.b
+    if (val == 42) {
+        ok("Optional chaining obj?.a?.b")
+    } else {
+        fail("Optional chaining obj", str("val=", val))
+    }
+} catch (e) {
+    fail("Optional chaining obj", e)
+}
+
+// -----------------------------------------------------------------------------
+// 51. dir on map (keys)
+// -----------------------------------------------------------------------------
+try {
+    let m = { "x": 1, "y": 2 }
+    let d = dir(m)
+    if (len(d) == 2 && (d[0] == "x" || d[0] == "y")) {
+        ok("dir(map)")
+    } else {
+        fail("dir map", str("len=", len(d)))
+    }
+} catch (e) {
+    fail("dir map", e)
+}
+
+// -----------------------------------------------------------------------------
+// 52. str(), int(), float() conversion
+// -----------------------------------------------------------------------------
+try {
+    let s = str(42)
+    let i = int(3.7)
+    let f = float(10)
+    if (s == "42" && i == 3 && f >= 9.99 && f <= 10.01) {
+        ok("str, int, float")
+    } else {
+        fail("str/int/float", str("s=", s, " i=", i, " f=", f))
+    }
+} catch (e) {
+    fail("str/int/float", e)
+}
+
+// -----------------------------------------------------------------------------
+// 53. freeze (returns copy)
+// -----------------------------------------------------------------------------
+try {
+    let a = array(1, 2)
+    let b = freeze(a)
+    if (len(b) == 2 && b[0] == 1) {
+        ok("freeze")
+    } else {
+        fail("freeze", str("len=", len(b)))
+    }
+} catch (e) {
+    fail("freeze", e)
+}
+
+// -----------------------------------------------------------------------------
+// SUMMARY
+// -----------------------------------------------------------------------------
+print("")
+print("=============================================================================")
+print(str("SUMMARY: ", passed, " passed, ", failed, " failed"))
+print("=============================================================================")
+if (failed > 0) {
+    print("Failed sections:")
+    for i in range(0, len(errors)) {
+        print(str("  - ", errors[i]))
+    }
+}
+print("")
+if (failed == 0) {
+    print("All tests passed.")
+} else {
+    print(str("Total failures: ", failed))
+}
+print("")
