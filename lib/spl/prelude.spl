@@ -1,0 +1,12 @@
+// SPL prelude — import("lib/spl/prelude.spl") for a small set of "batteries" in one go.
+// Pulls in: algo, result, testing, string_utils, math_extra, funtools.
+// For more: dict_utils, list_utils, io_utils, num_utils, stack, queue, table, range_utils,
+// bits, pairs, color, set_utils, cli_utils, log_utils, mem_utils, date_utils, graph_utils, iter_utils, hex_utils,
+// env_utils, path_utils, sort_utils, str_buf.
+
+import("lib/spl/algo.spl")
+import("lib/spl/result.spl")
+import("lib/spl/testing.spl")
+import("lib/spl/string_utils.spl")
+import("lib/spl/math_extra.spl")
+import("lib/spl/funtools.spl")
