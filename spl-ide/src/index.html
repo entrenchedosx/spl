@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com data:; worker-src 'self' blob:;" />
+  <title>SPL IDE</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+</head>
+<body class="theme-dark">
+  <div id="app">
+    <header class="toolbar">
+      <div class="toolbar-left">
+        <button type="button" id="btn-run" class="btn-run" title="Run (F5) – run current buffer">▶ Run</button>
+        <button type="button" id="btn-run-file" title="Run file – run saved file on disk">Run file</button>
+        <input type="text" id="script-args" class="script-args" placeholder="Args (e.g. hello 42)" title="Passed to script as cli_args()" />
+        <button type="button" id="btn-stop" class="btn-stop hidden" title="Stop running program">■ Stop</button>
+        <label class="toolbar-overlay" title="Run with overlay: draw boxes/text from OVERLAY: lines"><input type="checkbox" id="overlay-checkbox" /> Overlay</label>
+        <span class="toolbar-sep"></span>
+        <button type="button" id="btn-open-folder" title="Open folder">Folder</button>
+        <button type="button" id="btn-open-file" title="Open file">Open</button>
+        <button type="button" id="btn-save" title="Save (Ctrl+S)">Save</button>
+        <span class="toolbar-sep"></span>
+        <button type="button" id="btn-format" title="Format with spl --fmt (indent by braces)">Format</button>
+        <button type="button" id="btn-new-file" title="New file">New</button>
+        <button type="button" id="btn-repl" title="Toggle REPL">REPL</button>
+        <span id="project-name" class="project-name"></span>
+      </div>
+      <div class="toolbar-right">
+        <button type="button" id="btn-sidebar-toggle" title="Toggle sidebar (Ctrl+B)">☰</button>
+        <button type="button" id="btn-find" title="Find in file (Ctrl+F)">Find</button>
+        <button type="button" id="btn-replace" title="Replace in file (Ctrl+H)">Replace</button>
+        <button type="button" id="btn-panel" title="Show/hide output panel">Output</button>
+        <button type="button" id="btn-docs" title="SPL reference">Docs</button>
+        <button type="button" id="btn-theme" title="Toggle theme">Theme</button>
+      </div>
+    </header>
+
+    <div class="main">
+      <aside id="sidebar" class="sidebar">
+        <div class="sidebar-sections">
+          <section class="sidebar-section open" data-section="explorer">
+            <div class="sidebar-section-header" title="Project Explorer">
+              <span class="sidebar-section-icon">📁</span>
+              <span class="sidebar-section-title">Explorer</span>
+              <button type="button" class="sidebar-section-toggle" aria-label="Collapse">▼</button>
+            </div>
+            <div class="sidebar-section-toolbar">
+              <input type="text" id="sidebar-explorer-filter" class="sidebar-filter" placeholder="Filter files..." />
+              <button type="button" id="btn-sidebar-new-file" title="New file">📄</button>
+              <button type="button" id="btn-sidebar-new-folder" title="New folder">📁</button>
+            </div>
+            <div id="file-tree" class="file-tree sidebar-section-body"></div>
+          </section>
+          <section class="sidebar-section open" data-section="outline">
+            <div class="sidebar-section-header" title="Code outline – current file">
+              <span class="sidebar-section-icon">📑</span>
+              <span class="sidebar-section-title">Outline</span>
+              <button type="button" class="sidebar-section-toggle" aria-label="Collapse">▼</button>
+            </div>
+            <div id="outline-list" class="sidebar-section-body outline-list"></div>
+          </section>
+          <section class="sidebar-section open" data-section="problems">
+            <div class="sidebar-section-header" title="Errors and warnings">
+              <span class="sidebar-section-icon">⚠</span>
+              <span class="sidebar-section-title">Problems</span>
+              <span id="sidebar-problems-count" class="sidebar-badge">0</span>
+              <button type="button" class="sidebar-section-toggle" aria-label="Collapse">▼</button>
+            </div>
+            <div id="sidebar-problems-list" class="sidebar-section-body sidebar-problems-list"></div>
+          </section>
+          <section class="sidebar-section open" data-section="todo">
+            <div class="sidebar-section-header" title="TODO / FIXME / NOTE in comments">
+              <span class="sidebar-section-icon">💡</span>
+              <span class="sidebar-section-title">TODO</span>
+              <span id="sidebar-todo-count" class="sidebar-badge">0</span>
+              <button type="button" class="sidebar-section-toggle" aria-label="Collapse">▼</button>
+            </div>
+            <div id="sidebar-todo-list" class="sidebar-section-body sidebar-todo-list"></div>
+          </section>
+          <section class="sidebar-section open" data-section="search">
+            <div class="sidebar-section-header" title="Search in project">
+              <span class="sidebar-section-icon">🔍</span>
+              <span class="sidebar-section-title">Search</span>
+              <button type="button" class="sidebar-section-toggle" aria-label="Collapse">▼</button>
+            </div>
+            <div class="sidebar-section-body sidebar-search-row">
+              <input type="text" id="sidebar-search-input" class="sidebar-filter" placeholder="Search project..." />
+              <button type="button" id="btn-sidebar-search">Find</button>
+            </div>
+          </section>
+          <section class="sidebar-section open" data-section="snippets">
+            <div class="sidebar-section-header" title="Insert snippet">
+              <span class="sidebar-section-icon">◇</span>
+              <span class="sidebar-section-title">Snippets</span>
+              <button type="button" class="sidebar-section-toggle" aria-label="Collapse">▼</button>
+            </div>
+            <div id="sidebar-snippets-list" class="sidebar-section-body snippets-list"></div>
+          </section>
+        </div>
+        <div id="sidebar-context-menu" class="sidebar-context-menu hidden">
+          <button type="button" data-cmd="open">Open</button>
+          <button type="button" data-cmd="new-file">New file</button>
+          <button type="button" data-cmd="new-folder">New folder</button>
+          <button type="button" data-cmd="rename">Rename</button>
+          <button type="button" data-cmd="delete">Delete</button>
+        </div>
+      </aside>
+
+      <section class="editor-area">
+        <div id="welcome" class="welcome-panel">
+          <div class="welcome-inner">
+            <h1 class="welcome-title">Welcome to SPL</h1>
+            <p class="welcome-subtitle">Simple Programming Language – a small, friendly language to learn coding.</p>
+            <p class="welcome-note">This IDE runs <strong>SPL scripts only</strong>. Use the toolbar or F5 to run your code.</p>
+            <div class="welcome-actions">
+              <button type="button" id="welcome-run" class="welcome-btn welcome-btn-primary" title="Run code (F5)">▶ Run (F5)</button>
+              <button type="button" id="welcome-new" class="welcome-btn">New file</button>
+              <button type="button" id="welcome-open" class="welcome-btn">Open file</button>
+              <button type="button" id="welcome-folder" class="welcome-btn">Open folder</button>
+              <button type="button" id="welcome-shortcuts" class="welcome-btn" title="View keyboard shortcuts">⌨ Shortcuts</button>
+            </div>
+            <div class="welcome-tips">
+              <strong>Quick start</strong>
+              <ul>
+                <li>Press <kbd>F5</kbd> or click <strong>Run</strong> to run your code</li>
+                <li><kbd>Ctrl+Space</kbd> → IntelliSense: type <code>pri</code> for <code>print()</code>, or <code>math.</code> for sqrt, sin, PI, etc.</li>
+                <li>Syntax errors show while typing (run <code>spl --check</code> under the hood)</li>
+                <li>Matching braces <code>{ }</code> are highlighted; <kbd>Ctrl+Shift+O</kbd> for outline</li>
+                <li>Use <strong>Snippets</strong> in the sidebar to insert loops, functions, and more</li>
+                <li>Open <strong>Docs</strong> (toolbar) for built-ins and <code>import math</code>, <code>import string</code>, etc.</li>
+                <li><kbd>Ctrl+Shift+P</kbd> → command palette (Zoom, Fold, Theme, Shortcuts…)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div id="tabs" class="tabs"></div>
+        <div id="editor-container" class="editor-container"></div>
+      </section>
+
+      <aside id="doc-panel" class="doc-panel hidden">
+        <div class="doc-panel-header">
+          <span>SPL Reference</span>
+          <button id="btn-close-docs" title="Close">×</button>
+        </div>
+        <div id="doc-content" class="doc-content"></div>
+      </aside>
+    </div>
+
+    <footer id="panel" class="panel">
+      <div class="panel-tabs">
+        <div class="panel-tab-group">
+          <button type="button" class="panel-tab active" data-tab="output">Output</button>
+          <button type="button" class="panel-tab" data-tab="terminal">Terminal</button>
+          <button type="button" class="panel-tab" data-tab="problems">Problems</button>
+          <button type="button" class="panel-tab" data-tab="ast">AST</button>
+          <button type="button" class="panel-tab" data-tab="bytecode">Bytecode</button>
+        </div>
+        <div class="panel-tools">
+          <button type="button" id="btn-clear-output" title="Clear output">Clear</button>
+          <button type="button" id="btn-close-panel" title="Close panel">×</button>
+        </div>
+      </div>
+      <div id="panel-output" class="panel-content active">
+        <pre id="terminal-output"></pre>
+      </div>
+      <div id="panel-terminal" class="panel-content">
+        <pre id="integrated-terminal-output"></pre>
+        <div class="terminal-input-row">
+          <span class="terminal-prompt">$</span>
+          <input id="terminal-input" type="text" placeholder="spl run program.spl  or  spl build  or any command..." spellcheck="false" />
+        </div>
+      </div>
+      <div id="panel-problems" class="panel-content">
+        <div id="problems-list" class="problems-list"></div>
+      </div>
+      <div id="panel-ast" class="panel-content">
+        <pre id="ast-output" class="panel-pre"></pre>
+      </div>
+      <div id="panel-bytecode" class="panel-content">
+        <pre id="bytecode-output" class="panel-pre"></pre>
+      </div>
+      <div id="repl-area" class="repl-area hidden">
+        <pre id="repl-output" class="repl-output"></pre>
+        <div class="repl-input-row">
+          <span class="repl-prompt">></span>
+          <input id="repl-input" type="text" placeholder="SPL expression or statement..." spellcheck="false" />
+        </div>
+      </div>
+    </footer>
+
+    <div id="search-modal" class="search-modal hidden">
+      <div class="search-modal-inner">
+        <div class="search-header">
+          <input id="search-query" type="text" placeholder="Search in project (e.g. functionName or regex)" />
+          <label class="search-regex-label"><input type="checkbox" id="search-use-regex" /> Use regex</label>
+          <button type="button" id="search-btn">Search</button>
+          <button type="button" id="search-close">×</button>
+        </div>
+        <div id="search-results" class="search-results"></div>
+      </div>
+    </div>
+    <div id="command-palette" class="command-palette hidden">
+      <div class="command-palette-inner">
+        <input id="command-palette-input" type="text" placeholder="Type a command (Run, Save, Format, Theme...)" />
+        <div id="command-palette-list" class="command-palette-list"></div>
+      </div>
+    </div>
+    <div id="quick-open-modal" class="search-modal hidden">
+      <div class="search-modal-inner">
+        <input id="quick-open-input" type="text" placeholder="Type to open a file (e.g. main.spl)" />
+        <div id="quick-open-list" class="search-results"></div>
+      </div>
+    </div>
+    <div id="shortcuts-modal" class="search-modal hidden">
+      <div class="search-modal-inner" style="max-width: 480px; max-height: 80vh; overflow: auto;">
+        <div class="search-header" style="margin-bottom: 8px;">
+          <strong>Keyboard shortcuts</strong>
+          <button type="button" id="shortcuts-close">×</button>
+        </div>
+        <div id="shortcuts-list" class="shortcuts-list"></div>
+      </div>
+    </div>
+    <div id="settings-modal" class="search-modal hidden">
+      <div class="search-modal-inner" style="max-width: 360px;">
+        <div class="search-header" style="margin-bottom: 12px;">
+          <strong>Settings</strong>
+          <button type="button" id="settings-close" style="margin-left: auto;">×</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <label style="display: flex; align-items: center; justify-content: space-between;">
+            <span>Font size</span>
+            <input id="settings-fontSize" type="number" min="10" max="36" style="width: 60px;" />
+          </label>
+          <label style="display: flex; align-items: center; justify-content: space-between;">
+            <span>Tab size</span>
+            <input id="settings-tabSize" type="number" min="2" max="8" style="width: 60px;" />
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input id="settings-wordWrap" type="checkbox" />
+            <span>Word wrap</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input id="settings-formatOnSave" type="checkbox" />
+            <span>Format on save</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input id="settings-formatOnPaste" type="checkbox" />
+            <span>Format on paste</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input id="settings-trimTrailing" type="checkbox" />
+            <span>Trim trailing whitespace on save</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input id="settings-lineNumbers" type="checkbox" />
+            <span>Line numbers</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input id="settings-minimap" type="checkbox" />
+            <span>Minimap</span>
+          </label>
+        </div>
+        <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px;">
+          <button type="button" id="settings-cancel">Cancel</button>
+          <button type="button" id="settings-save">Save</button>
+        </div>
+      </div>
+    </div>
+    <div id="status-bar" class="status-bar">
+      <span id="status-position">Ln 1, Col 1</span>
+      <span id="status-stats" class="status-stats" title="Lines and characters"></span>
+      <span id="status-problems" class="status-problems" title="Errors and warnings">0</span>
+      <span id="status-unsaved" class="status-unsaved hidden">Unsaved</span>
+      <span id="status-language">SPL</span>
+      <span id="status-version" class="status-version" title="SPL runtime version"></span>
+      <span id="status-path" class="status-path"></span>
+    </div>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>

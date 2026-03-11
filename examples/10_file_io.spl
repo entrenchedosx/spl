@@ -1,0 +1,6 @@
+// File I/O: write_file, read_file
+let path = "spl_example_temp.txt"
+write_file(path, "Hello from SPL")
+let content = read_file(path)
+print("read back:", content)
+delete_file(path)

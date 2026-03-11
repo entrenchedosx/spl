@@ -1,0 +1,9 @@
+// Variables: let, const, and types
+let x = 42
+let name = "SPL"
+let pi = 3.14159
+print("x =", x)
+print("name =", name)
+print("pi =", pi)
+const MAX = 100
+print("MAX =", MAX)

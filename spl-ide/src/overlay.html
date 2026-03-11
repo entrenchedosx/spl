@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
+    #canvas { display: block; width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let shapes = [];
+    const defaultColor = 'rgba(255, 0, 0, 0.8)';
+
+    function parseColor(c) {
+      if (!c) return defaultColor;
+      const s = String(c).trim();
+      if (s.startsWith('#')) {
+        const hex = s.slice(1);
+        const r = parseInt(hex.slice(0, 2), 16);
+        const g = parseInt(hex.slice(2, 4), 16);
+        const b = parseInt(hex.slice(4, 6), 16);
+        const a = hex.length >= 8 ? parseInt(hex.slice(6, 8), 16) / 255 : 1;
+        return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+      }
+      if (s.startsWith('rgba')) return s;
+      if (s.startsWith('rgb')) return s;
+      return defaultColor;
+    }
+
+    function draw() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+      }
+      ctx.clearRect(0, 0, w, h);
+      shapes.forEach(function (s) {
+        if (s.type === 'rect') {
+          ctx.strokeStyle = parseColor(s.color);
+          ctx.lineWidth = s.lineWidth || 2;
+          ctx.strokeRect(s.x, s.y, s.w, s.h);
+          if (s.fill) {
+            ctx.fillStyle = parseColor(s.fill);
+            ctx.fillRect(s.x, s.y, s.w, s.h);
+          }
+        } else if (s.type === 'circle') {
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          if (s.fill) {
+            ctx.fillStyle = parseColor(s.fill);
+            ctx.fill();
+          }
+          ctx.strokeStyle = parseColor(s.color);
+          ctx.lineWidth = s.lineWidth || 2;
+          ctx.stroke();
+        } else if (s.type === 'line') {
+          ctx.strokeStyle = parseColor(s.color);
+          ctx.lineWidth = s.lineWidth || 2;
+          ctx.beginPath();
+          ctx.moveTo(s.x1, s.y1);
+          ctx.lineTo(s.x2, s.y2);
+          ctx.stroke();
+        } else if (s.type === 'text') {
+          ctx.font = (s.fontSize || 14) + 'px sans-serif';
+          ctx.fillStyle = parseColor(s.color);
+          ctx.fillText(s.text || '', s.x, s.y);
+        }
+      });
+    }
+
+    if (window.overlayApi && typeof window.overlayApi.onOverlayDraw === 'function') {
+      window.overlayApi.onOverlayDraw(function (newShapes) {
+        shapes = Array.isArray(newShapes) ? newShapes : [];
+        draw();
+      });
+    }
+    window.overlayDraw = draw;
+  </script>
+</body>
+</html>

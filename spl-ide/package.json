@@ -1,0 +1,48 @@
+{
+  "name": "spl-ide",
+  "version": "1.0.0",
+  "description": "IDE for SPL (Simple Programming Language)",
+  "main": "main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "author": "SPL",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "electron-packager": "^17.1.2"
+  },
+  "dependencies": {
+    "monaco-editor": "^0.45.0"
+  },
+  "build": {
+    "appId": "com.spl.ide",
+    "productName": "SPL IDE",
+    "icon": "icon.ico",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main/**",
+      "preload/**",
+      "src/**",
+      "resources/**"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}

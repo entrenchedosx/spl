@@ -1,0 +1,2 @@
+// Minimal SPL program
+print("Hello, World!")

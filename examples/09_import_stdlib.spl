@@ -1,0 +1,6 @@
+// Import stdlib modules: math, sys
+let math = import("math")
+print("math.sqrt(4) =", math.sqrt(4))
+print("math.PI =", math.PI)
+let sys = import("sys")
+print("spl_version:", sys.spl_version())
